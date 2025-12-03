@@ -5,10 +5,10 @@ A custom Claude Code marketplace and plugin repository for frontend development 
 ## What is this?
 
 This repository serves as both:
-1. A **Claude Code plugin** containing custom agents for frontend development
+1. A **Claude Code plugin** containing custom agents and MCP servers for frontend development
 2. A **custom plugin marketplace** for your team's agent distribution
 
-This approach allows your team to have a centralized location for all frontend development agents and easily distribute them across the team.
+This approach allows your team to have a centralized location for all frontend development agents, MCP servers, and easily distribute them across the team.
 
 ## Installation
 
@@ -56,6 +56,18 @@ For automatic marketplace setup across your team, add this to `.claude/settings.
 - **hcc-frontend-unit-test-writer** - Expert in writing focused unit tests for JavaScript/TypeScript functions and React hooks
 - **hcc-frontend-react-patternfly-code-quality-scanner** - Expert in scanning React + PatternFly projects for anti-patterns and technical debt
 - **hcc-frontend-dependency-cleanup-agent** - Expert in safely removing files and cleaning up orphaned dependencies
+
+## Available MCP Servers
+
+- **hcc-patternfly-data-view** - Model Context Protocol server providing @patternfly/react-data-view component documentation, examples, and implementation guidance
+
+📋 **For detailed MCP server documentation and standalone usage**, see: [packages/hcc-pf-mcp/README.md](packages/hcc-pf-mcp/README.md)
+
+### MCP Server Tools
+
+When the plugin is installed, these MCP tools become available:
+- **getPatternFlyDataViewDescription** - Get comprehensive documentation about @patternfly/react-data-view package capabilities
+- **getPatternFlyDataViewExample** - Get implementation examples for various data table scenarios (basic usage, sorting, filtering, pagination, selection, etc.)
 
 ## Testing Installation
 
