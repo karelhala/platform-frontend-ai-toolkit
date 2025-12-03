@@ -208,14 +208,130 @@ gh auth login
 - Debug mode: `claude --debug` to see plugin loading details
 - Report issues: [GitHub Issues](https://github.com/RedHatInsights/platform-frontend-ai-toolkit/issues)
 
+---
+
+## 🖱️ Using with Cursor
+
+This repository contains **Agents** (Rules) and **Tools** (MCPs) configured specifically for our team's workflows.
+
+### Option A: Install Script (Recommended)
+
+Download and run the install script in the root of **your** project:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/RedHatInsights/platform-frontend-ai-toolkit/main/install-cursor.sh | bash
+```
+
+### Option B: Manual One-Liner
+
+Run this command in the root of **your** project (the app you are working on, not this repo) to download the latest agents:
+
+```bash
+# Creates .cursor/rules and downloads our team agents
+mkdir -p .cursor/rules && \
+curl -o .cursor/rules/hello-world.mdc https://raw.githubusercontent.com/RedHatInsights/platform-frontend-ai-toolkit/main/cursor/rules/hello-world.mdc && \
+curl -o .cursor/rules/patternfly-component-builder.mdc https://raw.githubusercontent.com/RedHatInsights/platform-frontend-ai-toolkit/main/cursor/rules/patternfly-component-builder.mdc && \
+curl -o .cursor/rules/patternfly-dataview-specialist.mdc https://raw.githubusercontent.com/RedHatInsights/platform-frontend-ai-toolkit/main/cursor/rules/patternfly-dataview-specialist.mdc && \
+curl -o .cursor/rules/storybook-specialist.mdc https://raw.githubusercontent.com/RedHatInsights/platform-frontend-ai-toolkit/main/cursor/rules/storybook-specialist.mdc && \
+curl -o .cursor/rules/typescript-type-refiner.mdc https://raw.githubusercontent.com/RedHatInsights/platform-frontend-ai-toolkit/main/cursor/rules/typescript-type-refiner.mdc && \
+curl -o .cursor/rules/unit-test-writer.mdc https://raw.githubusercontent.com/RedHatInsights/platform-frontend-ai-toolkit/main/cursor/rules/unit-test-writer.mdc
+```
+
+*Restart Cursor after running this.*
+
+### Option C: Manual Setup
+
+#### 1\. Installing Agents (Rules)
+
+1.  Navigate to your project's root folder.
+2.  Create a folder named `.cursor/rules/`.
+3.  Copy the `.mdc` files from `cursor/rules/` in this repo into that folder.
+4.  **Verify:** Open Cursor, type `Cmd+K` (or `Ctrl+K`), and you should see the agents appear in the context menu.
+
+#### 2\. Connecting Tools (MCPs)
+
+1.  Open Cursor Settings (`Cmd/Ctrl + ,`).
+2.  Navigate to **General \> MCP**.
+3.  Locate `cursor/mcp-template.json` in this repo.
+4.  Copy the configuration for the tools you need and click **"Add new MCP server"** in Cursor.
+5.  **Note:** The MCP server will automatically use the published NPM package `@redhat-cloud-services/hcc-pf-mcp`.
+
+### How to Use
+
+  * **Chat:** Tag an agent by typing `@patternfly-component-builder` or `@typescript-type-refiner` in the chat window.
+  * **Composer:** In Composer (`Cmd+I`), the agents will automatically activate based on the file types you are editing (e.g., TypeScript files will auto-activate the type refiner).
+
+### Available Cursor Agents
+
+- **hello-world** - Verification agent for testing setup
+- **patternfly-component-builder** - Expert in PatternFly React components (forms, modals, navigation)
+- **patternfly-dataview-specialist** - Expert in PatternFly DataView components (tables, data grids)
+- **patternfly-css-utility-specialist** - Expert in PatternFly CSS utility classes
+- **storybook-specialist** - Expert in Storybook story creation and testing
+- **typescript-type-refiner** - Expert in TypeScript type safety and refinement
+- **unit-test-writer** - Expert in JavaScript/TypeScript unit testing
+- **react-patternfly-code-quality-scanner** - Expert in React + PatternFly code quality
+- **dependency-cleanup-agent** - Expert in safe file removal and dependency cleanup
+
+---
+
 ## Agent Naming Convention
 
 All agents use the `hcc-frontend-` prefix to avoid name collisions with other plugins and built-in agents.
 
 ## Contributing
 
-1. Follow the naming convention with `hcc-frontend-` prefix
-2. Place agent files in the `agents/` directory
-3. Include proper frontmatter with description and capabilities
-4. Test agents before submitting pull requests
-5. Update plugin version in `plugin.json` for releases
+### Adding or Updating Agents
+
+1. **Follow naming convention** with `hcc-frontend-` prefix
+2. **Place agent files** in the `claude/agents/` directory
+3. **Include proper frontmatter** with description and capabilities
+4. **Regenerate Cursor rules** after making changes:
+   ```bash
+   npm run convert-cursor
+   ```
+5. **Verify sync** before committing:
+   ```bash
+   npm run check-cursor-sync
+   ```
+6. **Test agents** before submitting pull requests
+7. **Update plugin version** in `plugin.json` for releases
+
+### ⚠️ Important: Cursor Rules Sync
+
+**When you modify Claude agents, you MUST regenerate the Cursor rules before committing.**
+
+Our CI will **automatically fail** if Cursor rules are out of sync with Claude agents. This ensures both editors always have the same functionality.
+
+#### Workflow:
+```bash
+# 1. Edit a Claude agent
+vim claude/agents/hcc-frontend-example.md
+
+# 2. Regenerate Cursor rules
+npm run convert-cursor
+
+# 3. Verify everything is in sync
+npm run check-cursor-sync
+
+# 4. Commit both changes
+git add claude/agents/hcc-frontend-example.md cursor/rules/example.mdc
+git commit -m "feat: update example agent"
+```
+
+#### CI Check:
+- **Triggers on:** PRs that modify `claude/agents/`, `cursor/rules/`, or conversion scripts
+- **Validates:** Cursor rules match Claude agents exactly
+- **Fails if:** Rules are out of sync or conversion script produces different output
+
+#### Local Development:
+```bash
+# Check if rules are in sync
+npm run check-cursor-sync
+
+# Fix sync issues
+npm run convert-cursor
+
+# Pre-commit hook (runs automatically)
+npm run precommit
+```

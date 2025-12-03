@@ -1,0 +1,68 @@
+name: Cursor Rules Sync Check
+
+on:
+  pull_request:
+    paths:
+      - 'claude/agents/**'
+      - 'scripts/convert-to-cursor.js'
+      - 'cursor/rules/**'
+
+jobs:
+  check-cursor-sync:
+    runs-on: ubuntu-latest
+    name: Verify Cursor Rules are in Sync
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Remove existing cursor rules
+        run: rm -rf cursor/rules/*.mdc
+
+      - name: Regenerate cursor rules from Claude agents
+        run: npm run convert-cursor
+
+      - name: Check for uncommitted changes
+        run: |
+          if [ -n "$(git status --porcelain cursor/rules/)" ]; then
+            echo "❌ Cursor rules are out of sync with Claude agents!"
+            echo ""
+            echo "The following files have changes:"
+            git status --porcelain cursor/rules/
+            echo ""
+            echo "📋 To fix this:"
+            echo "  1. Run: npm run convert-cursor"
+            echo "  2. Commit the updated cursor/*.mdc files"
+            echo "  3. Push your changes"
+            echo ""
+            echo "🔍 Detailed diff:"
+            git diff cursor/rules/
+            exit 1
+          else
+            echo "✅ Cursor rules are in sync with Claude agents"
+          fi
+
+      - name: Verify all agents were converted
+        run: |
+          claude_count=$(find claude/agents -name "hcc-frontend-*.md" | wc -l)
+          cursor_count=$(find cursor/rules -name "*.mdc" | wc -l)
+
+          echo "📊 Conversion summary:"
+          echo "  Claude agents: $claude_count"
+          echo "  Cursor rules: $cursor_count"
+
+          if [ $claude_count -ne $cursor_count ]; then
+            echo "❌ Mismatch in agent count!"
+            echo "Expected $claude_count cursor rules, but found $cursor_count"
+            exit 1
+          fi
+
+          echo "✅ All Claude agents have corresponding Cursor rules"
