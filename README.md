@@ -120,14 +120,14 @@ claude plugins status
 ### Update the Plugin
 
 ```bash
-# Update all plugins
+# Update the marketplace to get latest plugin versions
+/plugin marketplace update hcc-frontend-toolkit
+
+# Then update the plugin (via CLI interface or manually)
+/plugin install hcc-frontend-ai-toolkit@hcc-frontend-toolkit
+
+# Or update all plugins
 claude plugins update
-
-# Update this specific plugin
-claude plugins update hcc-frontend-ai-toolkit
-
-# Update to a specific version
-claude plugins install github:your-org/platform-frontend-ai-toolkit@v2.0.0
 ```
 
 ### Manual Update Process
