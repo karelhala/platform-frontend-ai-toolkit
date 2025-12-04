@@ -1,3 +1,13 @@
+## 0.3.1 (2025-12-04)
+
+### 🚀 Features
+
+- **mcp:** add additional tools for PF mcp ([0a3950e](https://github.com/RedHatInsights/platform-frontend-ai-toolkit/commit/0a3950e))
+
+### ❤️ Thank You
+
+- Martin Marosi @Hyperkid123
+
 ## 0.3.0 (2025-12-03)
 
 This was a version bump only for @redhat-cloud-services/hcc-pf-mcp to align it with other projects, there were no code changes.
