@@ -1,15 +1,16 @@
 # HCC JIRA MCP Server
 
-A Model Context Protocol (MCP) server for JIRA integration, providing AI assistants with the ability to interact with JIRA issues, projects, and workflows.
+A Model Context Protocol (MCP) server for JIRA integration, providing AI assistants with comprehensive assistance for JIRA operations, including getting detailed issue information, searching for issues, creating new issues, editing issue fields, retrieving comments, and posting comments.
 
 ## Features
 
 - 🔐 **Secure Credential Storage**: API tokens are stored in your system keychain (macOS Keychain, Windows Credential Manager, Linux Secret Service)
-- 🎫 Retrieve JIRA issue details
-- 🔍 Search for issues
-- ✏️ Create and update issues
-- 📊 Manage project information
-- 💬 Query issue comments and attachments
+- 🎫 Get comprehensive details for specific issues (all fields, transitions, rendered content)
+- 🔍 Search for issues using JQL (JIRA Query Language)
+- 📋 Get issue creation metadata (required fields, allowed values, field types)
+- ➕ Create new issues with all required and optional fields
+- ✏️ Edit and update issue fields (summary, description, assignee, priority, labels, custom fields)
+- 💬 Get and post comments on issues
 
 ## Installation
 
@@ -39,8 +40,14 @@ The fastest way to get started with Claude Code CLI:
 
 3. **Reload VSCode/Claude Code** and start using JIRA immediately!
    - "Get me the details for issue RHCLOUD-12345"
+   - "Show me everything about RHCLOUD-12345 - I need full context to work on it"
    - "Show me all open issues assigned to me"
    - "Find all high priority bugs closed last week"
+   - "Create a new Bug in project RHCLOUD with summary 'Login page crashes on mobile'"
+   - "Change the summary of RHCLOUD-12345 to 'Fix authentication bug'"
+   - "Update RHCLOUD-12345: set priority to High and assign to jdoe"
+   - "Show me the comments on RHCLOUD-12345"
+   - "Add a comment to RHCLOUD-12345 saying 'Fix verified in production'"
 
 **Note**: This method stores credentials in your VSCode settings. For more security, use Option 2 below.
 
@@ -134,6 +141,273 @@ Assistant: *Searches with JQL: assignee=FooBar AND status=Closed AND updated >= 
 - `project=MYPROJ AND created >= -30d` - Issues created in last 30 days
 - `assignee=jdoe AND status=Closed AND resolved >= -7d` - Closed by user in last week
 - `status in (Open, "In Progress") AND priority=High` - High priority active issues
+
+### get_jira_issue_details
+
+Get comprehensive details for a specific JIRA issue. Returns all available fields including description, attachments, subtasks, links, transitions, and rendered content. Use this when you need full information about a specific issue you're working on.
+
+**Parameters:**
+- `issueKey` (string): The JIRA issue key (e.g., 'RHCLOUD-12345')
+
+**Examples:**
+
+**Get full details for an issue:**
+```
+User: "Show me everything about RHCLOUD-12345"
+Assistant: *Fetches comprehensive details for issue RHCLOUD-12345*
+```
+
+**Working on a specific issue:**
+```
+User: "I'm working on RHCLOUD-12345, what are all the details?"
+Assistant: *Fetches full issue information including all fields*
+```
+
+**Response includes:**
+- All standard fields (summary, description, status, assignee, reporter, priority, labels, etc.)
+- Custom fields configured in your JIRA instance
+- Rendered description (HTML format)
+- Available transitions (workflow actions you can take)
+- Operations available on the issue
+- Subtasks, links, and attachments
+- All metadata and configuration
+
+**Use Cases:**
+- When you need to work on a specific issue and need complete context
+- Understanding the current state of an issue
+- Seeing all available workflow transitions
+- Accessing custom fields and metadata
+- Getting rendered HTML content for formatted descriptions
+
+**Note:** This tool is optimized for getting detailed information about a single issue. For searching or listing multiple issues, use `search_jira_issues` instead. For comments, use `get_jira_issue_comments`.
+
+### get_jira_create_metadata
+
+Get metadata about creating issues in JIRA. Returns information about available projects, issue types, and required/optional fields for issue creation. Use this before creating an issue to understand what fields are needed and what values are allowed.
+
+**Parameters:**
+- `projectKey` (string, optional): Filter by project key (e.g., 'RHCLOUD')
+- `projectId` (string, optional): Filter by project ID
+- `issuetypeName` (string, optional): Filter by issue type name (e.g., 'Bug', 'Story')
+- `issuetypeId` (string, optional): Filter by issue type ID
+
+**Examples:**
+
+**Get metadata for all projects:**
+```
+User: "What fields do I need to create an issue?"
+Assistant: *Fetches create metadata for all accessible projects*
+```
+
+**Get metadata for a specific project:**
+```
+User: "What fields are required to create a Bug in RHCLOUD?"
+Assistant: *Fetches metadata with projectKey='RHCLOUD' and issuetypeName='Bug'*
+```
+
+**Response includes:**
+- Available projects (key, id, name)
+- Available issue types per project (Bug, Story, Task, etc.)
+- Fields for each issue type:
+  - Field name and schema type
+  - Whether field is required or optional
+  - Whether field has a default value
+  - Allowed values (for select fields, priorities, etc.)
+  - Auto-complete URLs (for fields with auto-complete)
+  - Available operations (set, add, remove)
+
+**Use Cases:**
+- Discovering what fields are required before creating an issue
+- Understanding what values are allowed for a field (priorities, issue types, etc.)
+- Building dynamic forms or wizards for issue creation
+- Validating user input before attempting to create an issue
+- Finding custom fields and their configurations
+
+**Workflow:**
+1. Use `get_jira_create_metadata` to discover required fields and allowed values
+2. Collect necessary information from the user
+3. Use `create_jira_issue` with the collected fields
+
+**Example response structure:**
+```json
+{
+  "projects": [
+    {
+      "key": "RHCLOUD",
+      "id": "10001",
+      "name": "Red Hat Cloud",
+      "issuetypes": [
+        {
+          "id": "1",
+          "name": "Bug",
+          "description": "A problem which impairs functionality",
+          "subtask": false,
+          "fields": {
+            "summary": {
+              "name": "Summary",
+              "required": true,
+              "schema": { "type": "string", "system": "summary" }
+            },
+            "priority": {
+              "name": "Priority",
+              "required": false,
+              "hasDefaultValue": true,
+              "allowedValues": [
+                { "id": "1", "name": "High" },
+                { "id": "2", "name": "Medium" },
+                { "id": "3", "name": "Low" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+### create_jira_issue
+
+Create a new JIRA issue in a project. Requires project, summary, and issue type. Can include description, assignee, priority, labels, custom fields, and more. Returns the created issue key.
+
+**Parameters:**
+- `fields` (object): Issue fields to set
+
+**Required Fields:**
+- `project` (object): Project - use `{ key: "PROJKEY" }` or `{ id: "10001" }`
+- `summary` (string): Issue title/summary
+- `issuetype` (object): Issue type - use `{ name: "Bug" }` or `{ id: "1" }`
+
+**Optional Fields:**
+- `description` (string): Issue description
+- `assignee` (object): Assignee - use `{ name: "username" }` or `{ accountId: "id" }`
+- `priority` (object): Priority - use `{ name: "High" }` or `{ id: "1" }`
+- `labels` (array): Array of label strings
+- `customfield_*` (varies): Custom fields - type depends on field configuration
+- Any other editable field
+
+**Examples:**
+
+**Create a basic bug:**
+```
+User: "Create a new Bug in project RHCLOUD with summary 'Login page crashes on mobile'"
+Assistant: *Creates issue with required fields*
+```
+
+**Create issue with all details:**
+```
+User: "Create a Story in RHCLOUD: summary 'Implement dark mode', description 'Add dark mode toggle to settings', assign to jdoe, priority High, label 'ui-enhancement'"
+Assistant: *Creates issue with all specified fields*
+```
+
+**Create with custom fields:**
+```
+User: "Create a Bug in project RHCLOUD with summary 'API timeout' and set sprint to Sprint 5 (customfield_10001)"
+Assistant: *Creates issue with custom field*
+```
+
+**Response includes:**
+- Success confirmation
+- Created issue key (e.g., 'RHCLOUD-12345')
+- Created issue ID
+- Issue URL (web interface browse URL, e.g., 'https://issues.com/browse/RHCLOUD-12345')
+- API URL (REST API endpoint)
+
+**Important Notes:**
+- Project must exist and you must have create permissions
+- Issue type must be valid for the project
+- Some fields may be required based on project configuration
+- Field names and types vary by JIRA configuration
+
+### edit_jira_issue
+
+Edit and update fields on a JIRA issue. Can modify summary, description, assignee, priority, labels, custom fields, and other editable fields. Returns the updated field values after the change.
+
+**Parameters:**
+- `issueKey` (string): The JIRA issue key to edit (e.g., 'RHCLOUD-12345')
+- `fields` (object): Fields to update with their new values
+
+**Common Fields:**
+- `summary` (string): Issue title/summary
+- `description` (string): Issue description
+- `assignee` (object): Assignee - use `{ name: "username" }` or `{ accountId: "id" }`
+- `priority` (object): Priority - use `{ id: "1" }` or `{ name: "High" }`
+- `labels` (array): Array of label strings
+- `customfield_*` (varies): Custom fields - type depends on field configuration
+
+**Examples:**
+
+**Update issue summary:**
+```
+User: "Change the summary of RHCLOUD-12345 to 'Fix authentication bug in login flow'"
+Assistant: *Updates summary field*
+```
+
+**Update multiple fields:**
+```
+User: "Update RHCLOUD-12345: set priority to High, add label 'urgent', and assign to jdoe"
+Assistant: *Updates priority, labels, and assignee fields*
+```
+
+**Update custom field:**
+```
+User: "Set the sprint field (customfield_10001) to 'Sprint 5' for RHCLOUD-12345"
+Assistant: *Updates custom field value*
+```
+
+**Response includes:**
+- Success confirmation
+- List of updated field names
+- Current values of all fields after the update
+
+**Important Notes:**
+- To change issue status, use workflow transitions (not this tool)
+- Field names and types vary by JIRA configuration
+- Some fields may be required or have validation rules
+- You need edit permissions on the issue
+
+### get_jira_issue_comments
+
+Get all comments from a JIRA issue. Returns comment details including author, timestamps, and comment body.
+
+**Parameters:**
+- `issueKey` (string): The JIRA issue key (e.g., 'RHCLOUD-12345')
+- `maxResults` (number, optional): Maximum number of comments to return (default: 50, max: 100)
+
+**Examples:**
+
+**Get comments from an issue:**
+```
+User: "Show me the comments on RHCLOUD-12345"
+Assistant: *Fetches comments for issue RHCLOUD-12345*
+```
+
+**Response includes:**
+- Comment ID
+- Author name and email
+- Comment body text
+- Creation and update timestamps
+- Total comment count
+
+### add_jira_issue_comment
+
+Add a new comment to a JIRA issue. Posts a comment with the provided text.
+
+**Parameters:**
+- `issueKey` (string): The JIRA issue key to add the comment to (e.g., 'RHCLOUD-12345')
+- `comment` (string): The comment text to add to the issue
+
+**Examples:**
+
+**Add a comment to an issue:**
+```
+User: "Add a comment to RHCLOUD-12345 saying 'Investigation complete, fix deployed to staging'"
+Assistant: *Posts comment to issue RHCLOUD-12345*
+```
+
+**Response includes:**
+- Success confirmation
+- Created comment details (ID, author, timestamp, body)
 
 ## Use Case: Generating Weekly Team Reports
 
@@ -273,7 +547,12 @@ src/
     ├── jira-mcp.ts              # MCP server implementation
     ├── types.ts                 # TypeScript type definitions
     ├── tools/
-    │   └── getIssue.ts          # JIRA issue retrieval tool
+    │   ├── getIssue.ts          # JIRA issue search tool
+    │   ├── getIssueDetails.ts   # Get comprehensive issue details
+    │   ├── getCreateMeta.ts     # Get issue creation metadata
+    │   ├── createIssue.ts       # Create new JIRA issues
+    │   ├── editIssue.ts         # Edit/update issue fields
+    │   └── comment.ts           # JIRA comment tools (get/add)
     └── utils/
         └── credentialStore.ts   # Secure credential storage utilities
 ```

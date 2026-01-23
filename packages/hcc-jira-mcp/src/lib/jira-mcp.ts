@@ -2,6 +2,11 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { McpTool, JiraContext } from "./types";
 import { getIssueTool } from "./tools/getIssue";
+import { getIssueDetailsTool } from "./tools/getIssueDetails";
+import { createIssueTool } from "./tools/createIssue";
+import { getCreateMetaTool } from "./tools/getCreateMeta";
+import { editIssueTool } from "./tools/editIssue";
+import { getIssueCommentsTool, addIssueCommentTool } from "./tools/comment";
 import { getCredentials } from "./utils/credentialStore.js";
 import logger from "./utils/logger.js";
 
@@ -48,14 +53,20 @@ export async function run() {
 
     // Initialize tools with JIRA context
     const tools: McpTool[] = [
-      getIssueTool(jiraContext)
+      getIssueTool(jiraContext),
+      getIssueDetailsTool(jiraContext),
+      getCreateMetaTool(jiraContext),
+      createIssueTool(jiraContext),
+      editIssueTool(jiraContext),
+      getIssueCommentsTool(jiraContext),
+      addIssueCommentTool(jiraContext)
     ];
 
     server = new McpServer({
       name: 'HCC JIRA MCP Server',
       version: '0.1.0',
     }, {
-      instructions: `You are a Model Context Protocol (MCP) server for JIRA integration. You provide comprehensive assistance with JIRA operations, including issue management, searching, and project information retrieval.
+      instructions: `You are a Model Context Protocol (MCP) server for JIRA integration. You provide comprehensive assistance with JIRA operations, including getting detailed issue information, searching for issues, getting issue creation metadata, creating new issues, editing issue fields, retrieving comments, and posting comments.
 
 Connected to JIRA instance: ${credentials.baseUrl}`,
       capabilities: {

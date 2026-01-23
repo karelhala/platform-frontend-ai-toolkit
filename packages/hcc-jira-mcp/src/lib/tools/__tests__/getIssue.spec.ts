@@ -1,12 +1,12 @@
-import { getIssueTool } from './getIssue';
-import { JiraContext } from '../types';
+import { getIssueTool } from '../getIssue';
+import { JiraContext } from '../../types';
 
 // Mock fetch globally
 global.fetch = jest.fn();
 
 describe('getIssueTool', () => {
   const mockContext: JiraContext = {
-    baseUrl: 'https://issues.redhat.com',
+    baseUrl: 'https://issues.com',
     apiToken: 'test-token-123',
   };
 

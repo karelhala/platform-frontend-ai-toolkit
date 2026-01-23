@@ -15,7 +15,7 @@ import {
   deleteCredentials,
   hasCredentials,
   JiraCredentials,
-} from './credentialStore';
+} from '../credentialStore';
 
 describe('credentialStore', () => {
   const mockHomeDir = '/mock/home';
@@ -23,7 +23,7 @@ describe('credentialStore', () => {
   const mockConfigFile = path.join(mockConfigDir, 'config.json');
 
   const mockCredentials: JiraCredentials = {
-    baseUrl: 'https://issues.redhat.com',
+    baseUrl: 'https://issues.com',
     apiToken: 'test-api-token-123',
   };
 

@@ -1,14 +1,14 @@
-import { run } from './jira-mcp';
-import { getCredentials } from './utils/credentialStore.js';
+import { run } from '../jira-mcp';
+import { getCredentials } from '../utils/credentialStore.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import logger from './utils/logger.js';
+import logger from '../utils/logger.js';
 
 // Mock dependencies
-jest.mock('./utils/credentialStore.js');
+jest.mock('../utils/credentialStore.js');
 jest.mock('@modelcontextprotocol/sdk/server/mcp.js');
 jest.mock('@modelcontextprotocol/sdk/server/stdio.js');
-jest.mock('./utils/logger.js');
+jest.mock('../utils/logger.js');
 
 describe('jira-mcp server', () => {
   let mockServer: jest.Mocked<McpServer>;
@@ -50,7 +50,7 @@ describe('jira-mcp server', () => {
 
   describe('initialization with environment variables', () => {
     it('should start server with environment variables', async () => {
-      process.env.JIRA_BASE_URL = 'https://issues.redhat.com';
+      process.env.JIRA_BASE_URL = 'https://issues.com';
       process.env.JIRA_API_TOKEN = 'test-token';
 
       await run();
@@ -61,7 +61,7 @@ describe('jira-mcp server', () => {
           version: '0.1.0',
         }),
         expect.objectContaining({
-          instructions: expect.stringContaining('https://issues.redhat.com'),
+          instructions: expect.stringContaining('https://issues.com'),
           capabilities: { tools: {} },
         })
       );
@@ -73,7 +73,7 @@ describe('jira-mcp server', () => {
     });
 
     it('should register search_jira_issues tool', async () => {
-      process.env.JIRA_BASE_URL = 'https://issues.redhat.com';
+      process.env.JIRA_BASE_URL = 'https://issues.com';
       process.env.JIRA_API_TOKEN = 'test-token';
 
       await run();
@@ -88,7 +88,7 @@ describe('jira-mcp server', () => {
     });
 
     it('should connect server to stdio transport', async () => {
-      process.env.JIRA_BASE_URL = 'https://issues.redhat.com';
+      process.env.JIRA_BASE_URL = 'https://issues.com';
       process.env.JIRA_API_TOKEN = 'test-token';
 
       await run();
@@ -104,7 +104,7 @@ describe('jira-mcp server', () => {
       delete process.env.JIRA_API_TOKEN;
 
       (getCredentials as jest.Mock).mockResolvedValue({
-        baseUrl: 'https://issues.redhat.com',
+        baseUrl: 'https://issues.com',
         apiToken: 'keychain-token',
       });
 
@@ -142,7 +142,7 @@ describe('jira-mcp server', () => {
     });
 
     it('should handle server initialization errors', async () => {
-      process.env.JIRA_BASE_URL = 'https://issues.redhat.com';
+      process.env.JIRA_BASE_URL = 'https://issues.com';
       process.env.JIRA_API_TOKEN = 'test-token';
 
       (McpServer as jest.Mock).mockImplementation(() => {
@@ -156,7 +156,7 @@ describe('jira-mcp server', () => {
     });
 
     it('should handle transport connection errors', async () => {
-      process.env.JIRA_BASE_URL = 'https://issues.redhat.com';
+      process.env.JIRA_BASE_URL = 'https://issues.com';
       process.env.JIRA_API_TOKEN = 'test-token';
 
       mockServer.connect.mockRejectedValue(new Error('Connection failed'));
@@ -190,7 +190,7 @@ describe('jira-mcp server', () => {
     });
 
     it('should require both environment variables to be set', async () => {
-      process.env.JIRA_BASE_URL = 'https://issues.redhat.com';
+      process.env.JIRA_BASE_URL = 'https://issues.com';
       delete process.env.JIRA_API_TOKEN;
 
       (getCredentials as jest.Mock).mockResolvedValue({
@@ -210,7 +210,7 @@ describe('jira-mcp server', () => {
 
   describe('server metadata', () => {
     it('should set correct server name and version', async () => {
-      process.env.JIRA_BASE_URL = 'https://issues.redhat.com';
+      process.env.JIRA_BASE_URL = 'https://issues.com';
       process.env.JIRA_API_TOKEN = 'test-token';
 
       await run();
@@ -239,7 +239,7 @@ describe('jira-mcp server', () => {
     });
 
     it('should declare tools capability', async () => {
-      process.env.JIRA_BASE_URL = 'https://issues.redhat.com';
+      process.env.JIRA_BASE_URL = 'https://issues.com';
       process.env.JIRA_API_TOKEN = 'test-token';
 
       await run();
@@ -255,7 +255,7 @@ describe('jira-mcp server', () => {
 
   describe('SIGINT handling', () => {
     it('should register SIGINT handler', async () => {
-      process.env.JIRA_BASE_URL = 'https://issues.redhat.com';
+      process.env.JIRA_BASE_URL = 'https://issues.com';
       process.env.JIRA_API_TOKEN = 'test-token';
 
       const processOnSpy = jest.spyOn(process, 'on');
