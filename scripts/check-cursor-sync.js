@@ -20,7 +20,7 @@ function main() {
     // Count Claude agents
     const claudeAgentsDir = path.join(__dirname, '../claude/agents');
     const claudeAgents = fs.readdirSync(claudeAgentsDir)
-      .filter(file => file.startsWith('hcc-frontend-') && file.endsWith('.md'));
+      .filter(file => (file.startsWith('hcc-frontend-') || file.startsWith('hcc-infra-')) && file.endsWith('.md'));
 
     // Save current cursor rule contents before regeneration
     const existingMdcFiles = fs.readdirSync(cursorRulesDir)

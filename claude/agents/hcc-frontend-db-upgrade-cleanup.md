@@ -1,0 +1,121 @@
+---
+description: Removes blue/green deployment configuration after successful database upgrade
+capabilities:
+  - Removes blue_green_deployment section from namespace YAML
+  - Creates pull request for cleanup
+---
+
+# HCC Frontend DB Upgrade Cleanup Agent
+
+This agent removes the blue/green deployment configuration from the namespace file after a successful database upgrade. This is the final step in the upgrade workflow.
+
+## When to Use This Agent
+
+Use this agent when:
+- This is **step 4 for stage** or **step 5 for production** (final step)
+- After the switchover has completed successfully
+- The new database version is confirmed running
+- Application is healthy and stable
+
+## Prerequisites
+
+Get from the user:
+- Service name (e.g., "chrome-service")
+- Environment (stage or production)
+- Product name (default: "insights")
+
+## Implementation Steps
+
+### 1. Gather Information
+
+Ask the user for:
+- Service name
+- Environment (stage or production)
+- Target PostgreSQL version (for reference)
+- Product (defaults to "insights")
+
+### 2. Call the db-upgrader Skill
+
+Call the `db-upgrader` skill with the cleanup action:
+
+```javascript
+Skill("db-upgrader", args: "{service} {environment} {version} {product} cleanup")
+```
+
+**Example:**
+```javascript
+Skill("db-upgrader", args: "chrome-service stage 16.9 insights cleanup")
+```
+
+The skill will receive:
+- `$ARGUMENTS.service` - Service name (e.g., "chrome-service")
+- `$ARGUMENTS.environment` - Environment (e.g., "stage")
+- `$ARGUMENTS.version` - Target PostgreSQL version (e.g., "16.9")
+- `$ARGUMENTS.product` - Product/bundle (e.g., "insights")
+- `$ARGUMENTS.action` - "cleanup"
+
+The skill will:
+1. Locate the namespace file: `data/services/{product}/{service}/namespaces/{service}-{env}.yml`
+2. Read the current content
+3. Remove the entire `blue_green_deployment` section
+4. Write back the cleaned content
+
+### 3. Validate Changes
+
+After the skill completes, verify:
+- ✅ The `blue_green_deployment` section is completely removed
+- ✅ No other parts of the file were modified
+- ✅ YAML syntax is still valid
+- ✅ The rest of the namespace configuration is intact
+
+### 4. Create Pull Request
+
+- **Branch**: `{service}-{env}-cleanup-{date}`
+- **Commit**: `{service} {env} db upgrade - cleanup green deployment`
+- **PR Title**: `Cleanup green deployment entry for {service} {environment}`
+
+## What This Does
+
+Removes the blue/green deployment configuration:
+
+**Before:**
+```yaml
+externalResources:
+- provider: rds
+  name: chrome-service-stage
+  provisioner:
+    $ref: /aws/account/app-sre.yml
+  blue_green_deployment:
+    enabled: true
+    switchover: true
+    delete: true
+    target:
+      engine_version: "16.9"
+```
+
+**After:**
+```yaml
+externalResources:
+- provider: rds
+  name: chrome-service-stage
+  provisioner:
+    $ref: /aws/account/app-sre.yml
+```
+
+This signals that:
+- The upgrade is complete
+- No blue/green deployment is in progress
+- The service is running on the new version normally
+
+## Notes
+
+- Only perform cleanup after confirming switchover succeeded
+- The blue/green configuration is no longer needed
+- This allows future upgrades to start fresh
+
+## Completion
+
+After this PR is merged:
+- ✅ Database upgrade workflow is complete!
+- The service is now running on the upgraded PostgreSQL version
+- Future upgrades can follow the same workflow
