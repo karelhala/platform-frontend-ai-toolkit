@@ -32,72 +32,47 @@ Get from the user:
 
 Ask the user for:
 - Service name
-- Environment
-- Target engine version (e.g., "16.9")
+- Environment (stage or production)
+- Target PostgreSQL version (e.g., "16.9")
 - Product (defaults to "insights")
 
-Derive:
-- Major version (e.g., "16" from "16.9")
-- Service identifier (from namespace file)
-- Current engine version (from RDS file)
+### 2. Call the db-upgrader Skill
 
-### 2. Locate Files
+Call the `db-upgrader` skill with the switchover action:
 
-**Namespace file:**
-```
-data/services/{product}/{service}/namespaces/{service}-{env}.yml
-```
-
-**RDS file** (search pattern):
-```
-resources/terraform/resources/{product}/{environment}/rds/postgres*-rds-*{service}*.yml
-```
-
-Use glob to find: `resources/terraform/resources/{product}/{environment}/rds/postgres*-rds-*.yml`
-Then filter by service name.
-
-### 3. Use the db-upgrader Skill
-
-**Modify namespace file:**
 ```javascript
-// Read current content
-const namespaceContent = await read(namespacePath);
-
-// Update switchover flags
-const updatedNamespace = YamlEditor.updateSwitchoverFlags(namespaceContent);
-
-// Write back
-await write(namespacePath, updatedNamespace);
+Skill("db-upgrader", args: "{service} {environment} {version} {product} switchover")
 ```
 
-This changes:
-- `switchover: false` → `switchover: true`
-- `delete: false` → `delete: true`
-
-**Modify RDS file:**
+**Example:**
 ```javascript
-// Read current content
-const rdsContent = await read(rdsPath);
-
-// Update engine version
-const updatedRds = YamlEditor.updateEngineVersion(rdsContent, targetVersion);
-
-// Write back
-await write(rdsPath, updatedRds);
+Skill("db-upgrader", args: "chrome-service stage 16.9 insights switchover")
 ```
 
-This changes:
-- `engine_version: "16.4"` → `engine_version: "16.9"`
+The skill will receive:
+- `$ARGUMENTS.service` - Service name (e.g., "chrome-service")
+- `$ARGUMENTS.environment` - Environment (e.g., "stage")
+- `$ARGUMENTS.version` - Target PostgreSQL version (e.g., "16.9")
+- `$ARGUMENTS.product` - Product/bundle (e.g., "insights")
+- `$ARGUMENTS.action` - "switchover"
 
-### 4. Validate Changes
+The skill will:
+1. Locate and read the namespace file: `data/services/{product}/{service}/namespaces/{service}-{env}.yml`
+2. Update switchover flags:
+   - `switchover: false` → `switchover: true`
+   - `delete: false` → `delete: true`
+3. Locate and read the RDS file: `resources/terraform/resources/{product}/{environment}/rds/postgres*-rds-*{service}*.yml`
+4. Update engine version: `engine_version: "16.4"` → `engine_version: "16.9"`
 
-Before committing, verify:
+### 3. Validate Changes
+
+After the skill completes, verify:
 - ✅ Namespace has `switchover: true` and `delete: true`
 - ✅ RDS has new `engine_version`
 - ✅ Engine versions match between namespace target and RDS file
 - ✅ No other unintended changes
 
-### 5. Create Pull Request
+### 4. Create Pull Request
 
 - **Branch**: `{service}-{env}-switchover-{date}`
 - **Commit**: `{service} {env} db upgrade - switch over to the new RDS {version} instance`

@@ -28,30 +28,37 @@ Get from the user:
 
 Ask the user for:
 - Service name
-- Environment
+- Environment (stage or production)
+- Target PostgreSQL version
 - Product (defaults to "insights")
 - Date (defaults to today's date)
 
-### 2. Use the db-upgrader Skill
+### 2. Call the db-upgrader Skill
 
-Call the `db-upgrader` skill to create the SQL query file:
+Call the `db-upgrader` skill with the replication-check action:
 
-**Generate YAML content:**
 ```javascript
-const paths = new AppInterfacePaths(serviceName, environment, product);
-const yamlContent = YamlGenerator.generateReplicationCheck(
-  serviceName,
-  environment,
-  product,
-  date
-);
+Skill("db-upgrader", args: "{service} {environment} {version} {product} replication-check")
 ```
 
-**Write to file:**
-- Path: `data/app-interface/sql-queries/{product}/{service-short}/{env}/{date}-{env}-check-used-replication-slots.yaml`
-- Use `paths.getReplicationCheckPath(date)` to get the path
+**Example:**
+```javascript
+Skill("db-upgrader", args: "chrome-service stage 16.9 insights replication-check")
+```
+
+The skill will receive:
+- `$ARGUMENTS.service` - Service name (e.g., "chrome-service")
+- `$ARGUMENTS.environment` - Environment (e.g., "stage")
+- `$ARGUMENTS.version` - Target PostgreSQL version (e.g., "16.9")
+- `$ARGUMENTS.product` - Product/bundle (e.g., "insights")
+- `$ARGUMENTS.action` - "replication-check"
+
+The skill will generate the SQL query YAML file at:
+`data/app-interface/sql-queries/{product}/{service-short}/{env}/{date}-{env}-check-used-replication-slots.yaml`
 
 ### 3. Create Pull Request
+
+After the skill completes the YAML operations:
 
 - **Branch**: `{service}-{env}-check-replication-slots-{date}`
 - **Commit**: `Check if no replication slots are used for {service} {environment}`

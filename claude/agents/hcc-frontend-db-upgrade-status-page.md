@@ -36,36 +36,37 @@ Ask the user for:
 - Maintenance date
 - Start time in UTC
 - Duration in hours
+- Target PostgreSQL version (for the db-upgrader skill)
 
 Calculate:
 - End time (start + duration)
 - ET times for user-friendly display (UTC - 5 hours typically)
 
-### 2. Create Maintenance Message
+### 2. Call the db-upgrader Skill
 
-Generate a message like:
-```
-The Red Hat Hybrid Cloud Console will undergo a DB upgrade for
-{service} starting on {date} at {time} UTC ({time} ET). The updates are
-expected to last approximately {duration} hours until {time} UTC ({time} ET).
+Call the `db-upgrader` skill with the status-page action:
 
-During this maintenance window, the console UI may briefly be unavailable.
+```javascript
+Skill("db-upgrader", args: "{service} production {version} {product} status-page")
 ```
 
-### 3. Use the db-upgrader Skill
+**Example:**
+```javascript
+Skill("db-upgrader", args: "chrome-service production 16.9 insights status-page")
+```
 
-Call the `db-upgrader` skill to:
+The skill will receive:
+- `$ARGUMENTS.service` - Service name (e.g., "chrome-service")
+- `$ARGUMENTS.environment` - "production"
+- `$ARGUMENTS.version` - Target PostgreSQL version (e.g., "16.9")
+- `$ARGUMENTS.product` - Product/bundle (e.g., "insights")
+- `$ARGUMENTS.action` - "status-page"
 
-**Create maintenance file:**
-- Use helper: `YamlGenerator.generateStatusPageMaintenance()`
-- Path: `data/dependencies/statuspage/maintenances/production-{service}-db-maintenance-{date}.yml`
+The skill will handle creating the maintenance message and YAML files.
 
-**Update component file:**
-- Use helper: `YamlEditor.updateComponentStatus()`
-- Path: `data/dependencies/statuspage/components/status-page-component-{product}-{service}.yml`
-- Add reference to the maintenance file
+### 3. Create Pull Request
 
-### 4. Create Pull Request
+After the skill completes the YAML operations:
 
 - **Branch**: `{service}-status-page-{date}`
 - **Commit**: `Update status page for {service} on {date}`

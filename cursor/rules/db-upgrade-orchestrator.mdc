@@ -70,9 +70,28 @@ const isProduction = environment === 'production';
 const nextStep = WorkflowState.getNextStep(currentStep, isProduction);
 ```
 
-### 4. Delegate to Sub-Agent
+### 4. Delegate to Sub-Agent or Call Skill Directly
 
-Based on the next step, delegate to the appropriate agent:
+**Option 1: Call db-upgrader skill without action (orchestrator mode)**
+```javascript
+Skill("db-upgrader", args: "{service} {environment} {version} {product}")
+```
+
+The skill will analyze git history and determine the next step automatically.
+
+**Option 2: Call db-upgrader skill with specific action**
+Based on the next step, call the skill with the appropriate action:
+
+| Next Step | Skill Call |
+|-----------|------------|
+| status-page | `Skill("db-upgrader", args: "{service} production {version} {product} status-page")` |
+| replication-check | `Skill("db-upgrader", args: "{service} {environment} {version} {product} replication-check")` |
+| post-maintenance | `Skill("db-upgrader", args: "{service} {environment} {version} {product} post-maintenance")` |
+| switchover | `Skill("db-upgrader", args: "{service} {environment} {version} {product} switchover")` |
+| cleanup | `Skill("db-upgrader", args: "{service} {environment} {version} {product} cleanup")` |
+
+**Option 3: Delegate to specialized sub-agent**
+Alternatively, delegate to the appropriate agent:
 
 | Next Step | Agent to Call |
 |-----------|---------------|
@@ -82,7 +101,7 @@ Based on the next step, delegate to the appropriate agent:
 | switchover | `hcc-frontend-db-upgrade-switchover` |
 | cleanup | `hcc-frontend-db-upgrade-cleanup` |
 
-Pass the service information to the sub-agent.
+Each sub-agent will internally call the db-upgrader skill with the appropriate action.
 
 ### 5. Report Progress
 

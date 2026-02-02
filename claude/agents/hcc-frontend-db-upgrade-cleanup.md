@@ -30,47 +30,45 @@ Get from the user:
 
 Ask the user for:
 - Service name
-- Environment
+- Environment (stage or production)
+- Target PostgreSQL version (for reference)
 - Product (defaults to "insights")
 
-### 2. Locate Namespace File
+### 2. Call the db-upgrader Skill
 
-**Namespace file:**
-```
-data/services/{product}/{service}/namespaces/{service}-{env}.yml
-```
+Call the `db-upgrader` skill with the cleanup action:
 
-Use helper to get path:
 ```javascript
-const paths = new AppInterfacePaths(serviceName, environment, product);
-const namespacePath = paths.getNamespacePath();
+Skill("db-upgrader", args: "{service} {environment} {version} {product} cleanup")
 ```
 
-### 3. Use the db-upgrader Skill
-
-**Remove blue/green deployment section:**
+**Example:**
 ```javascript
-// Read current content
-const namespaceContent = await read(namespacePath);
-
-// Remove blue_green_deployment section
-const cleanedContent = YamlEditor.removeBlueGreenDeployment(namespaceContent);
-
-// Write back
-await write(namespacePath, cleanedContent);
+Skill("db-upgrader", args: "chrome-service stage 16.9 insights cleanup")
 ```
 
-This removes the entire `blue_green_deployment` block from the namespace YAML.
+The skill will receive:
+- `$ARGUMENTS.service` - Service name (e.g., "chrome-service")
+- `$ARGUMENTS.environment` - Environment (e.g., "stage")
+- `$ARGUMENTS.version` - Target PostgreSQL version (e.g., "16.9")
+- `$ARGUMENTS.product` - Product/bundle (e.g., "insights")
+- `$ARGUMENTS.action` - "cleanup"
 
-### 4. Validate Changes
+The skill will:
+1. Locate the namespace file: `data/services/{product}/{service}/namespaces/{service}-{env}.yml`
+2. Read the current content
+3. Remove the entire `blue_green_deployment` section
+4. Write back the cleaned content
 
-Before committing, verify:
+### 3. Validate Changes
+
+After the skill completes, verify:
 - ✅ The `blue_green_deployment` section is completely removed
 - ✅ No other parts of the file were modified
 - ✅ YAML syntax is still valid
 - ✅ The rest of the namespace configuration is intact
 
-### 5. Create Pull Request
+### 4. Create Pull Request
 
 - **Branch**: `{service}-{env}-cleanup-{date}`
 - **Commit**: `{service} {env} db upgrade - cleanup green deployment`
