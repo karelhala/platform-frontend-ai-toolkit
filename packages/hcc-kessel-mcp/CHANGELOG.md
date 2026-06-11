@@ -1,3 +1,18 @@
+## 0.4.0 (2026-06-11)
+
+### 🚀 Features
+
+- add hcc-rbac-kessel-mcp — RBAC v1 → Kessel v2 migration MCP server ([09e9bed](https://github.com/karelhala/platform-frontend-ai-toolkit/commit/09e9bed))
+
+### 🩹 Fixes
+
+- **hcc-kessel-mcp:** add README with usage and tool documentation ([#35](https://github.com/karelhala/platform-frontend-ai-toolkit/pull/35))
+
+### ❤️ Thank You
+
+- Claude Sonnet 4.6
+- Riccardo Forina
+
 ## 0.3.0 (2026-05-21)
 
 This was a version bump only for @redhat-cloud-services/hcc-kessel-mcp to align it with other projects, there were no code changes.

@@ -1,3 +1,19 @@
+## 0.4.0 (2026-06-11)
+
+### 🚀 Features
+
+- **agent:** frontend.yaml and feo migration specialists ([#17](https://github.com/karelhala/platform-frontend-ai-toolkit/pull/17))
+
+### 🩹 Fixes
+
+- **feo-release:** fix feo release by making it access public ([#22](https://github.com/karelhala/platform-frontend-ai-toolkit/pull/22))
+- **feo-mcp:** fix feo mcp by adding zod and providing the metadata ([#21](https://github.com/karelhala/platform-frontend-ai-toolkit/pull/21))
+
+### ❤️ Thank You
+
+- Justin Orringer
+- Karel Hala
+
 ## 0.3.0 (2026-05-21)
 
 This was a version bump only for @redhat-cloud-services/hcc-feo-mcp to align it with other projects, there were no code changes.

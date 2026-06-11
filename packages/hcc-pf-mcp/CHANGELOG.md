@@ -1,3 +1,22 @@
+## 0.7.0 (2026-06-11)
+
+### 🚀 Features
+
+- **mcp:** add additional tools for PF mcp ([0a3950e](https://github.com/karelhala/platform-frontend-ai-toolkit/commit/0a3950e))
+- add experimental PF mcp server ([fd199e7](https://github.com/karelhala/platform-frontend-ai-toolkit/commit/fd199e7))
+- setup relaese pipeline ([b286fed](https://github.com/karelhala/platform-frontend-ai-toolkit/commit/b286fed))
+
+### 🩹 Fixes
+
+- **mcp:** PF source code resolution ([ac6931e](https://github.com/karelhala/platform-frontend-ai-toolkit/commit/ac6931e))
+- make the build output cjs compatible ([0406d2f](https://github.com/karelhala/platform-frontend-ai-toolkit/commit/0406d2f))
+- ensure git repository matches provenance requirements ([c8239a7](https://github.com/karelhala/platform-frontend-ai-toolkit/commit/c8239a7))
+- configure mpc package to be executable via npx ([6fd7711](https://github.com/karelhala/platform-frontend-ai-toolkit/commit/6fd7711))
+
+### ❤️ Thank You
+
+- Martin Marosi @Hyperkid123
+
 ## 0.6.0 (2026-05-21)
 
 This was a version bump only for @redhat-cloud-services/hcc-pf-mcp to align it with other projects, there were no code changes.

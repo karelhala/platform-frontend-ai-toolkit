@@ -1,3 +1,15 @@
+## 1.2.0 (2026-06-11)
+
+### 🚀 Features
+
+- **jira-issue-creator:** replace agent with Python-validated skill ([c963344](https://github.com/karelhala/platform-frontend-ai-toolkit/commit/c963344))
+- split plugins and implement NX automated release workflow ([834e356](https://github.com/karelhala/platform-frontend-ai-toolkit/commit/834e356))
+
+### ❤️ Thank You
+
+- Charles Mulder
+- Radek Kaluzik
+
 ## 1.1.1 (2026-05-27)
 
 ### 🚀 Features
